@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Distrito T-Mobile — Your Reward</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mg: #c0008e;
+  --pu: #6b0fac;
+  --dp: #2d0045;
+  --lt: #f8e6ff;
+  --wh: #ffffff;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body {
+  width:100%; min-height:100vh;
+  background: var(--dp);
+  display:flex; flex-direction:column; align-items:center;
+  font-family:'DM Sans', sans-serif;
+  overflow-x:hidden;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(192,0,142,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(107,15,172,0.2) 0%, transparent 50%);
+  pointer-events:none;
+}
+.page { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; padding:2.5rem 1.5rem 3rem; width:100%; max-width:480px; }
+.wordmark { font-family:'Cormorant Garamond',serif; font-size:12px; letter-spacing:6px; text-transform:uppercase; color:rgba(248,230,255,0.5); margin-bottom:0.6rem; }
+.headline { font-family:'Cormorant Garamond',serif; font-size:2.4rem; font-weight:700; color:var(--wh); text-align:center; line-height:1.1; margin-bottom:0.4rem; }
+.headline span { color:#e080ff; }
+.byline { font-size:13px; color:rgba(248,230,255,0.45); letter-spacing:0.5px; margin-bottom:2rem; }
+.wheel-wrap { position:relative; width:min(340px, 92vw); height:min(340px, 92vw); margin-bottom:2rem; }
+#wheelCanvas { display:block; border-radius:50%; filter:drop-shadow(0 0 30px rgba(180,0,220,0.3)); }
+.arrow-wrap {
+  position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; z-index:20;
+}
+.arrow-body { width:4px; height:16px; background:var(--wh); border-radius:2px; }
+.arrow-tip { width:0; height:0; border-left:11px solid transparent; border-right:11px solid transparent; border-top:26px solid var(--wh); filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
+.hub {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:44px; height:44px; border-radius:50%;
+  background:var(--dp); border:3px solid rgba(224,128,255,0.5);
+  display:flex; align-items:center; justify-content:center; z-index:10;
+  font-size:16px;
+}
+.spin-btn {
+  font-family:'Cormorant Garamond',serif; font-size:1.15rem; font-weight:700; letter-spacing:2px;
+  color:var(--dp); background:var(--wh); border:none; border-radius:50px;
+  padding:0.9rem 3rem; cursor:pointer;
+  box-shadow:0 4px 30px rgba(192,0,142,0.4);
+  transition:transform 0.15s, box-shadow 0.15s;
+}
+.spin-btn:hover { transform:translateY(-2px); box-shadow:0 8px 36px rgba(192,0,142,0.55); }
+.spin-btn:active { transform:scale(0.97); }
+.spin-btn:disabled { opacity:0.35; cursor:not-allowed; transform:none; }
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(10,0,24,0.88); z-index:200; align-items:center; justify-content:center; padding:1.5rem; }
+.modal-bg.open { display:flex; animation:fadeIn 0.25s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal {
+  background:linear-gradient(160deg, #1a0030, #0d0020);
+  border:1px solid rgba(224,128,255,0.25); border-radius:28px;
+  padding:2.5rem 2rem 2rem; max-width:340px; width:100%; text-align:center;
+  position:relative; animation:popUp 0.4s cubic-bezier(0.175,0.885,0.32,1.275); overflow:hidden;
+}
+@keyframes popUp { from{opacity:0;transform:scale(0.85) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.modal-glow { position:absolute; top:-60px; left:50%; transform:translateX(-50%); width:200px; height:200px; border-radius:50%; background:radial-gradient(circle, rgba(192,0,142,0.25) 0%, transparent 70%); pointer-events:none; }
+.m-icon { font-size:3.5rem; display:block; margin-bottom:0.75rem; }
+.m-eyebrow { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:rgba(224,128,255,0.6); margin-bottom:0.5rem; }
+.m-title { font-family:'Cormorant Garamond',serif; font-size:1.9rem; font-weight:700; color:var(--wh); line-height:1.2; margin-bottom:0.5rem; }
+.m-desc { font-size:13px; color:rgba(248,230,255,0.55); line-height:1.65; margin-bottom:1.5rem; }
+.staff-card { display:none; background:linear-gradient(135deg, rgba(192,0,142,0.2), rgba(107,15,172,0.2)); border:1px solid rgba(224,128,255,0.3); border-radius:16px; padding:1.1rem 1.25rem; margin-bottom:1.25rem; animation:fadeIn 0.3s ease; }
+.staff-card.show { display:block; }
+.sc-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(224,128,255,0.55); margin-bottom:0.35rem; }
+.sc-code { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:700; color:#e080ff; margin-bottom:0.25rem; line-height:1.3; }
+.sc-valid { font-size:10px; color:rgba(248,230,255,0.35); letter-spacing:1px; }
+.show-staff-btn { width:100%; padding:0.85rem; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; color:var(--dp); background:var(--wh); border:none; border-radius:50px; cursor:pointer; margin-bottom:0.75rem; transition:background 0.2s; }
+.show-staff-btn:hover { background:#f0d0ff; }
+.done-btn { font-size:12px; color:rgba(248,230,255,0.35); background:none; border:none; cursor:pointer; transition:color 0.2s; }
+.done-btn:hover { color:rgba(248,230,255,0.7); }
+.confetti-layer { position:absolute; inset:0; pointer-events:none; overflow:hidden; border-radius:28px; }
+.cc { position:absolute; width:6px; height:6px; top:-10px; animation:ccfall linear forwards; }
+@keyframes ccfall { to { transform:translateY(450px) rotate(720deg); opacity:0; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="wordmark">Distrito T-Mobile</div>
+  <h1 class="headline">You've earned a<br><span>reward</span></h1>
+  <p class="byline">Thank you for your feedback</p>
+  <div class="wheel-wrap">
+    <div class="arrow-wrap">
+      <div class="arrow-tip"></div>
+      <div class="arrow-body"></div>
+    </div>
+    <canvas id="wheelCanvas"></canvas>
+    <div class="hub">✦</div>
+  </div>
+  <button class="spin-btn" id="spinBtn">Spin to Reveal</button>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modal">
+    <div class="modal-glow"></div>
+    <div class="confetti-layer" id="confettiLayer"></div>
+    <span class="m-icon" id="mIcon"></span>
+    <div class="m-eyebrow">You won</div>
+    <div class="m-title" id="mTitle"></div>
+    <div class="m-desc" id="mDesc"></div>
+    <div class="staff-card" id="staffCard">
+      <div class="sc-label">Show to staff to redeem</div>
+      <div class="sc-code" id="scCode"></div>
+      <div class="sc-valid">Valid today only · One per visit</div>
+    </div>
+    <button class="show-staff-btn" id="showStaffBtn">Show to Staff Member</button>
+    <button class="done-btn" id="doneBtn">Done</button>
+  </div>
+</div>
+
+<script>
+const PRIZES = [
+  {
+    label: "Behind the\nScenes",
+    icon: "🎬",
+    title: "Behind the Scenes Content",
+    desc: "Exclusive insider content from Distrito. Check your email for your behind the scenes access.",
+    staff: "BEHIND THE SCENES\nExclusive Access",
+    prob: 0.30,
+    colors: ["#3d0070", "#6b20a0"]
+  },
+  {
+    label: "VIP Priority\nEntry",
+    icon: "⭐",
+    title: "VIP Priority Concert Entry",
+    desc: "Skip the line on your next visit to any Distrito concert or event. Show this to staff at the entrance.",
+    staff: "VIP PRIORITY ENTRY\nNext Concert Visit",
+    prob: 0.30,
+    colors: ["#6b0fac", "#9b3fc0"]
+  },
+  {
+    label: "Loyalty\nBenefits",
+    icon: "🏆",
+    title: "Loyalty Program Entry Benefits",
+    desc: "You are being added to the Distrito loyalty program. Exclusive benefits and early access coming your way.",
+    staff: "LOYALTY PROGRAM\nEntry Benefits",
+    prob: 0.25,
+    colors: ["#4a0075", "#7b30b0"]
+  },
+  {
+    label: "Free\nCoffee",
+    icon: "☕",
+    title: "Free Small Coffee",
+    desc: "Enjoy a complimentary small coffee at any Distrito venue. Valid today only.",
+    staff: "FREE SMALL COFFEE\nToday Only",
+    prob: 0.08,
+    colors: ["#8b0080", "#c040b0"]
+  },
+  {
+    label: "Buy One\nGet One",
+    icon: "🍹",
+    title: "Buy One Drink Get One Free",
+    desc: "Buy one drink and get one free at any Distrito bar. Valid today only.",
+    staff: "BOGO DRINK\nToday Only",
+    prob: 0.05,
+    colors: ["#2d0060", "#6020a0"]
+  },
+  {
+    label: "Free\nAppetizer",
+    icon: "🍽️",
+    title: "Free Appetizer",
+    desc: "Enjoy a complimentary appetizer at any Distrito restaurant. Valid today only.",
+    staff: "FREE APPETIZER\nToday Only",
+    prob: 0.02,
+    colors: ["#c060e0", "#d890f0"]
+  }
+];
+
+const N = PRIZES.length;
+const TWO_PI = 2 * Math.PI;
+const SLICE = TWO_PI / N;
+
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+
+function setSize() {
+  const s = Math.min(340, window.innerWidth * 0.92);
+  canvas.width = s;
+  canvas.height = s;
+}
+setSize();
+window.addEventListener('resize', () => { setSize(); drawWheel(currentAngle); });
+
+const cx = () => canvas.width / 2;
+const cy = () => canvas.height / 2;
+const R  = () => canvas.width / 2 - 2;
+
+// Arrow points DOWN from top = canvas angle -PI/2
+// Prize 0 centered at top: startAngle + 0.5*SLICE = -PI/2
+// => startAngle = -PI/2 - SLICE/2
+const INIT_ANGLE = -Math.PI / 2 - SLICE / 2;
+let currentAngle = INIT_ANGLE;
+
+function drawWheel(angle) {
+  const c = cx(), r = R(), h = cy();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < N; i++) {
+    const startA = angle + i * SLICE;
+    const endA   = startA + SLICE;
+    const midA   = startA + SLICE / 2;
+    const grad = ctx.createRadialGradient(c, h, 0, c, h, r);
+    grad.addColorStop(0, PRIZES[i].colors[1]);
+    grad.addColorStop(1, PRIZES[i].colors[0]);
+    ctx.beginPath();
+    ctx.moveTo(c, h);
+    ctx.arc(c, h, r, startA, endA);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(c, h);
+    ctx.rotate(midA);
+    const lines = PRIZES[i].label.split('\n');
+    const textX = r * 0.60;
+    lines.forEach((line, li) => {
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.font = `600 ${canvas.width < 280 ? 10 : 12}px 'DM Sans', sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(line, textX, (li - (lines.length - 1) / 2) * 16);
+    });
+    ctx.restore();
+  }
+  ctx.beginPath();
+  ctx.arc(c, h, r, 0, TWO_PI);
+  ctx.strokeStyle = 'rgba(224,128,255,0.35)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+drawWheel(currentAngle);
+
+function pickWinner() {
+  const thresholds = [];
+  let acc = 0;
+  for (let i = 0; i < N; i++) { acc += PRIZES[i].prob; thresholds.push(acc); }
+  const r = Math.random();
+  for (let i = 0; i < N; i++) { if (r < thresholds[i]) return i; }
+  return N - 1;
+}
+
+function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+let spinning = false;
+
+document.getElementById('spinBtn').addEventListener('click', () => {
+  if (spinning) return;
+  spinning = true;
+  document.getElementById('spinBtn').disabled = true;
+
+  const winner = pickWinner();
+
+  // Calculate exact stopping angle so prize[winner] center is under arrow (-PI/2)
+  // Prize[winner] center relative to wheel = winner * SLICE + SLICE/2
+  // We need: currentAngle + totalRot + winner*SLICE + SLICE/2 ≡ -PI/2 (mod 2PI)
+  const arrowAngle = -Math.PI / 2;
+  const prizeCenter = winner * SLICE + SLICE / 2;
+  const SPINS = 6 + Math.floor(Math.random() * 4);
+  let totalRot = arrowAngle - currentAngle - prizeCenter;
+  totalRot = ((totalRot % TWO_PI) + TWO_PI) % TWO_PI; // normalize to [0, 2PI]
+  if (totalRot < 0.1) totalRot += TWO_PI; // ensure visible spin
+  totalRot += SPINS * TWO_PI;
+
+  const startAngle = currentAngle;
+  const endAngle = startAngle + totalRot;
+  const DURATION = 5500 + Math.random() * 800;
+  const startTime = performance.now();
+
+  function frame(now) {
+    const t = Math.min((now - startTime) / DURATION, 1);
+    currentAngle = startAngle + totalRot * easeOut(t);
+    drawWheel(currentAngle);
+    if (t < 1) { requestAnimationFrame(frame); }
+    else {
+      currentAngle = endAngle;
+      drawWheel(currentAngle);
+      spinning = false;
+      setTimeout(() => showPrize(winner), 350);
+    }
+  }
+  requestAnimationFrame(frame);
+});
+
+function showPrize(i) {
+  const p = PRIZES[i];
+  document.getElementById('mIcon').textContent = p.icon;
+  document.getElementById('mTitle').textContent = p.title;
+  document.getElementById('mDesc').textContent = p.desc;
+  document.getElementById('scCode').textContent = p.staff;
+  document.getElementById('staffCard').classList.remove('show');
+  document.getElementById('showStaffBtn').style.display = 'block';
+  spawnConfetti();
+  document.getElementById('modalBg').classList.add('open');
+}
+
+function spawnConfetti() {
+  const layer = document.getElementById('confettiLayer');
+  layer.innerHTML = '';
+  const colors = ['#e080ff','#ffffff','#c0008e','#f0c0ff','#8b3fc0','#ffd4f5'];
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('div');
+    el.className = 'cc';
+    const size = 4 + Math.random() * 7;
+    const delay = Math.random() * 0.6;
+    const dur = 1.2 + Math.random() * 1.5;
+    el.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};animation-duration:${dur}s;animation-delay:${delay}s;`;
+    layer.appendChild(el);
+  }
+}
+
+document.getElementById('showStaffBtn').addEventListener('click', () => {
+  document.getElementById('staffCard').classList.add('show');
+  document.getElementById('showStaffBtn').style.display = 'none';
+});
+
+document.getElementById('doneBtn').addEventListener('click', () => {
+  document.getElementById('modalBg').classList.remove('open');
+});
+</script>
+</body>
+</html>
